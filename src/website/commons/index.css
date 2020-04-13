@@ -1,0 +1,113 @@
+/**
+ *   MAKE ELECTRON APP FEEL MORE NATIVE
+ *
+ *   * Prevent dragging all HTML elements, specially:
+ *   	- images
+ *   	- links (anchors)
+ *
+ *   * Prevent text selection
+ */
+
+ *, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+	cursor: default;
+}
+
+/* Global app appearance */
+@font-face {
+  font-family: 'Escolar-regular';
+  src: url('../fonts/Escolar-regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Escolar-bold';
+  src: url('../fonts/Escolar-bold.woff') format('woff');
+}
+
+body {
+  font-family: 'Escolar-regular';
+}
+
+.app {
+  background-color: #e9ecef;
+}
+
+.lead {
+  font-size: 1.75rem;
+}
+
+p {
+  font-size: 1.5rem;
+}
+
+/* Jumbotron full height */
+.jumbotron.full-height {
+    height: 100vh;
+    margin-bottom: 0rem;
+}
+
+.full-height .container:first-child {
+    height: 100%;
+    position: relative;
+}
+
+.container.align-bottom {
+    position: absolute;
+    bottom: 0px;
+}
+
+.card.selected {
+    border-width: 3px !important;
+    border-color: rgba(0, 0, 0, 1.0);;
+}
+.card.unselected {
+    border-width: 3px !important;
+    border-color: rgba(255, 255, 255, 0.0);
+}
+
+/* Route transitions */
+.transitions {
+  position: relative;
+}
+
+.page {
+  position: absolute;
+  width: 100%;
+}
+
+.page-enter {
+  opacity: 0;
+  transform: translateX(10%);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0%);
+  transition: opacity 350ms, transform 350ms;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateX(0%);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateX(-10%);
+  transition: opacity 350ms, transform 350ms;
+}
+
+/* Grid content */
+
+.center-vertical {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  padding: 5px;
+}
+
+.btn-block {
+  font-size: 1.5rem;  
+}
