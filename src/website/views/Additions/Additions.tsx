@@ -1,5 +1,4 @@
-import React, { RefObject } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 
 import Page, { PageProps } from '../../components/Page/Page';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -8,8 +7,8 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal  from 'react-bootstrap/Modal';
-import { ArithmeticQuiz, ArithmeticQuizInfo, Operator } from '../../components/ArithmeticQuiz/ArithmeticQuiz';
-const remote = window.require('electron').remote;
+import { ArithmeticQuiz } from '../../components/ArithmeticQuiz/ArithmeticQuiz';
+;
 
 const MAX_ARITHMETIC_QUIZS = 4;
 
@@ -35,8 +34,9 @@ export class Additions extends Page<AdditionsState> {
   }
 
   onResultModalFinish() {
-    var window = remote.getCurrentWindow();
-    window.close();
+    const remote = window.require('electron').remote;
+    var win = remote.getCurrentWindow();
+    win.close();
   }
 
   createArithmeticQuizs() {
