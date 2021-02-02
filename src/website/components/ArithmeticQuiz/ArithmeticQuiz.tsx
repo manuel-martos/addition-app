@@ -18,7 +18,7 @@ export interface ArithmeticQuizState {
 }
 
 export class ArithmeticQuiz extends Component<any, ArithmeticQuizState> {
-  private answer = React.createRef<FormControl & HTMLInputElement>();
+  private answer = React.createRef<typeof FormControl & HTMLInputElement>();
 
   constructor(props: any) {
     super(props);

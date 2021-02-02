@@ -15,7 +15,7 @@ interface StartState {
 }
 
 export class Start extends Page<StartState> {
-  private nameInput = React.createRef<FormControl & HTMLInputElement>();
+  private nameInput = React.createRef<typeof FormControl & HTMLInputElement>();
 
   constructor(props: any) {
     super(props);
