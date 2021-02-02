@@ -54,8 +54,8 @@ export class Additions extends Page<AdditionsState> {
     return (
       <Modal show={this.state.showResult}>
         <Modal.Body>
-          <p>Has donat totes les respostes correctes. Molt ben fet!</p>
-          <p>Ara pots decidir si vols acabarà o si vols tornar a fer mes sumes.</p>
+          <p>Totes les respostes son correctes. Molt ben fet!</p>
+          <p>Ara pots decidir si vols acabar o si vols tornar a fer mes sumes.</p>
         </Modal.Body>
 
         <Modal.Footer>
