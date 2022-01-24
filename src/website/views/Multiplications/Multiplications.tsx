@@ -11,11 +11,11 @@ import { ArithmeticQuiz, Operator } from '../../components/ArithmeticQuiz/Arithm
 
 const MAX_ARITHMETIC_QUIZS = 4;
 
-interface AdditionsState {
+interface MultiplicationsState {
   showResult: boolean
 }
 
-export class Additions extends Page<AdditionsState> {
+export class Multiplications extends Page<MultiplicationsState> {
   private arithmeticQuizs: ArithmeticQuiz[] = [];
 
   constructor(props: PageProps) {
@@ -43,7 +43,7 @@ export class Additions extends Page<AdditionsState> {
     this.arithmeticQuizs = []; 
     for (let idx = 0; idx < MAX_ARITHMETIC_QUIZS; idx++) {
       quizs.push(<ArithmeticQuiz 
-        operator={Operator.Add}
+        operator={Operator.Multiply}
         operandsGenerator={this.createArithmeticQuizInfo}
         key={idx} 
         ref={ref => { this.arithmeticQuizs.splice(idx, 1, ref!) }} />);
@@ -53,10 +53,13 @@ export class Additions extends Page<AdditionsState> {
 
   private createArithmeticQuizInfo() {
     let value1, value2;
-    do {
-      value1 = 1 + Math.floor(Math.random() * 8);
-      value2 = 1 + Math.floor(Math.random() * 8);
-    } while (value1 < value2);
+    if (Math.floor(Math.random() * 10) % 2 == 0) {
+      value1 = Math.floor(Math.random() * 10) % 2 == 0 ? 2 : 5;
+      value2 = Math.floor(Math.random() * 10);
+    } else {
+      value1 = Math.floor(Math.random() * 10);
+      value2 = Math.floor(Math.random() * 10) % 2 == 0 ? 2 : 5;
+    }
     return { value1: value1, value2: value2 };
   }
 
@@ -65,12 +68,12 @@ export class Additions extends Page<AdditionsState> {
       <Modal show={this.state.showResult}>
         <Modal.Body>
           <p>Totes les respostes son correctes. Molt ben fet!</p>
-          <p>Ara pots decidir si vols acabar o si vols tornar a fer mes sumes.</p>
+          <p>Ara pots decidir si vols acabar o si vols tornar a fer mes multiplicacions.</p>
         </Modal.Body>
 
         <Modal.Footer>
           <Button variant="secondary" onClick={this.onResultModalFinish}>Acabar</Button>
-          <Button variant="primary" onClick={this.onResultModalRefresh}>Tornar a fer sumes</Button>
+          <Button variant="primary" onClick={this.onResultModalRefresh}>Tornar a fer multiplicacions</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -78,9 +81,9 @@ export class Additions extends Page<AdditionsState> {
 
   render() {
     let pageHeader = {
-      title: `Fem sumes!`,
-      lead: `Les sumes son molt divertides.`,
-      description: `Escriu el resultat de les sumes:`
+      title: `Fem multiplicacions!`,
+      lead: `Les multiplicacions son molt utils.`,
+      description: `Escriu el resultat de les multiplicacions:`
     };
     return (
       <>

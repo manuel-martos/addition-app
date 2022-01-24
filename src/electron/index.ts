@@ -30,7 +30,7 @@ app.allowRendererProcessReuse = true;
 
 app.on('ready', () => {
   createWindow();
-  // registerDevToolsShortcut();
+  registerDevToolsShortcut();
 });
 
 app.on('activate', () => {

@@ -1,25 +1,32 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom';
+import { RouteComponentProps } from "react-router";
 
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal  from 'react-bootstrap/Modal';
 
-import Page from '../../components/Page/Page';
+import Page, { PageProps } from '../../components/Page/Page';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import PageBody from '../../components/PageBody/PageBody';
 
 const settings = window.require('electron-settings');
 
 interface StartState {
   name: string;
+  selection?: string;
 }
 
-export class Start extends Page<StartState> {
+class Start extends Page<StartState, PageProps & RouteComponentProps> {
   private nameInput = React.createRef<typeof FormControl & HTMLInputElement>();
 
   constructor(props: any) {
     super(props);
-    this.state = { name: settings.get('name') };
+    this.state = { 
+      name: settings.get('name'),
+      selection: undefined
+    };
     this.onNameModalOk = this.onNameModalOk.bind(this);
     console.log(window);
   }
@@ -42,6 +49,22 @@ export class Start extends Page<StartState> {
       return (
         <>
           <PageHeader info={pageHeader}/>
+          <PageBody>
+            <Form className="h4">
+              <Form.Check 
+                onChange={event => this.setState({selection: event.currentTarget.id})} 
+                type="radio" 
+                name="exercise" 
+                id={`additions`} 
+                label={`Sumes`}/>
+              <Form.Check
+                onChange={event => this.setState({selection: event.currentTarget.id})} 
+                type="radio"
+                name="exercise"
+                id={`multiplications`}
+                label={`Multiplicacions`}/>
+            </Form>
+          </PageBody>
         </>
       );
     } else {
@@ -51,7 +74,7 @@ export class Start extends Page<StartState> {
             <p>Benvingut a aquesta aplicació. Necesito saber el teu nom.</p>
             <Form>
               <Form.Label>Introdueix el teu nom</Form.Label>
-                <Form.Control  ref={this.nameInput} type="text"/>
+                <Form.Control ref={this.nameInput} type="text"/>
             </Form>
           </Modal.Body>
 
@@ -67,8 +90,18 @@ export class Start extends Page<StartState> {
     let rightButton = {
       visible: true,
       text: 'Continuar',
-      link: '/additions'
+      onClick: this.resolveNavigation.bind(this)
     };
     this.props.initNavigationButtons?.(undefined, rightButton);
   }
+
+  resolveNavigation() {
+    console.log(`this.state.selection -> ${this.state.selection}`)
+    if (this.state.selection != undefined) {
+      console.log(`this.state.selection -> ${this.state.selection}`)
+      this.props.history.push(`/${this.state.selection}`)
+    }
+  }
 }
+
+export default withRouter(Start);

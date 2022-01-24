@@ -4,12 +4,16 @@ import Col from 'react-bootstrap/Col';
 import FormControl from 'react-bootstrap/FormControl';
 import Row from 'react-bootstrap/Row';
 
-export enum Operator {Add, Substract}
+export enum Operator {Add, Substract, Multiply}
 
 export interface ArithmeticQuizInfo {
   value1: number;
   value2: number;
+};
+
+export interface ArithmeticQuizProps {
   operator: Operator;
+  operandsGenerator: () => ArithmeticQuizInfo;
 };
 
 export interface ArithmeticQuizState {
@@ -17,32 +21,23 @@ export interface ArithmeticQuizState {
   result?: boolean;
 }
 
-export class ArithmeticQuiz extends Component<any, ArithmeticQuizState> {
+export class ArithmeticQuiz extends Component<ArithmeticQuizProps, ArithmeticQuizState> {
   private answer = React.createRef<typeof FormControl & HTMLInputElement>();
 
-  constructor(props: any) {
+  constructor(props: ArithmeticQuizProps) {
     super(props);
-    this.state = {result: undefined, quizInfo: this.createRandomQuiz()};
+    this.state = {result: undefined, quizInfo: this.props.operandsGenerator()};
   }
 
   updateQuiz() {
-    this.setState({result: undefined, quizInfo: this.createRandomQuiz()});
+    this.setState({result: undefined, quizInfo: this.props.operandsGenerator()});
     if (this.answer.current) {
       this.answer.current.value = '';
     }
   }
 
-  private createRandomQuiz() {
-    let value1, value2;
-    do {
-      value1 = 1 + Math.floor(Math.random() * 8);
-      value2 = 1 + Math.floor(Math.random() * 8);
-    } while (value1 < value2);
-    return { value1: value1, value2: value2, operator: Operator.Add };
-  }
-
   render() {
-    let op = this.state.quizInfo.operator === Operator.Add ? '+' : '-'; 
+    let op = this.resolveOperatorChar()
     let style = this.state.result !== undefined 
       ? { borderColor: this.state.result ? 'green' : 'red' }
       : {}
@@ -63,6 +58,14 @@ export class ArithmeticQuiz extends Component<any, ArithmeticQuizState> {
     );
   }
 
+  resolveOperatorChar() {
+    switch (this.props.operator) {
+      case Operator.Add: return '+';
+      case Operator.Substract: return '-';
+      case Operator.Multiply: return '×';
+    }
+  }
+
   validateAnswer() {
     const result = this.getCurrentAnswer() === this.getValidAnswer();
     this.setState({ result: result });
@@ -78,10 +81,10 @@ export class ArithmeticQuiz extends Component<any, ArithmeticQuizState> {
   }
 
   private getValidAnswer() {
-    if (this.state.quizInfo.operator == Operator.Add) {
-      return this.state.quizInfo.value1 + this.state.quizInfo.value2;
-    } else {
-      return this.state.quizInfo.value1 - this.state.quizInfo.value2;
+    switch (this.props.operator) {
+      case Operator.Add: return this.state.quizInfo.value1 + this.state.quizInfo.value2;
+      case Operator.Substract: return this.state.quizInfo.value1 - this.state.quizInfo.value2;
+      case Operator.Multiply: return this.state.quizInfo.value1 * this.state.quizInfo.value2;
     }
   }
 }

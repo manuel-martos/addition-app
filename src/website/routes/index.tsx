@@ -1,5 +1,6 @@
-import { Start } from "../views/Start/Start";
+import Start from "../views/Start/Start";
 import { Additions } from "../views/Additions/Additions";
+import { Multiplications } from "../views/Multiplications/Multiplications";
 
 const indexRoutes = [
   { 
@@ -9,6 +10,10 @@ const indexRoutes = [
   { 
     path: '/additions', 
     Component: Additions 
+  },
+  { 
+    path: '/multiplications', 
+    Component: Multiplications 
   }
 ];
 
