@@ -1,71 +1,76 @@
-import React, { Component } from 'react';
-
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import { Link } from 'react-router-dom';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import { Container, Row, Col } from 'react-bootstrap';
+import { LinkContainer } from "react-router-bootstrap";
+import { Button, type ButtonProps } from "react-bootstrap";
 
 export interface NavButtonState {
-    visible: Boolean;
-    text: string;
-    link?: string;
-    onClick?: () => void;
+  visible: boolean;
+  text: string;
+  link?: string;
+  onClick?: () => void;
 }
 
 export interface BottomNavigationState {
-    left?: NavButtonState;
-    right?: NavButtonState;
+  left?: NavButtonState;
+  right?: NavButtonState;
 }
 
-export default class BottomNavigation extends Component<any, BottomNavigationState> {
-  constructor(props: any) {
-    super(props);
-    this.state = { left: undefined, right: undefined };
-  }
+export interface BottomNavigationHandle {
+  updateButtons: (left?: NavButtonState, right?: NavButtonState) => void;
+}
 
-  updateButtons(left?: NavButtonState, right?: NavButtonState) {
-    this.setState({left: left, right: right});
-  }
+// ✅ give it a real props shape (extend later if needed)
+export type BottomNavigationProps = {
+  className?: string;
+};
 
-  render() {
+const BottomNavigation = forwardRef<BottomNavigationHandle, BottomNavigationProps>(
+  (_props, ref) => {
+    const [state, setState] = useState<BottomNavigationState>({});
+
+    useImperativeHandle(ref, () => ({
+      updateButtons: (left?: NavButtonState, right?: NavButtonState) => setState({ left, right }),
+    }), []);
+
+    const createButton = (
+      btn: NavButtonState,
+      className: string,
+      variant: ButtonProps["variant"]
+    ) => {
+      if (btn.link) {
+        return (
+          <LinkContainer to={btn.link}>
+            <Button className={`${className} w-100`} variant={variant}>
+              {btn.text}
+            </Button>
+          </LinkContainer>
+        );
+      }
+      return (
+        <Button
+          className={`${className} w-100`}
+          variant={variant}
+          onClick={btn.onClick}
+        >
+          {btn.text}
+        </Button>
+      );
+    };
+
     return (
-      <Container className='align-bottom'>
+      <Container className="align-bottom">
         <Row>
-          <Col md={3}> 
-            {
-              this.state.left && 
-              this.state.left.visible && 
-              this.createButton(this.state.left, 'float-left', 'warning') 
-            }
+          <Col md={3}>
+            {state.left?.visible && createButton(state.left, 'float-start', 'warning')}
           </Col>
           <Col md={{ span: 3, offset: 6 }}>
-            {
-              this.state.right && 
-              this.state.right.visible && 
-              this.createButton(this.state.right, 'float-right', 'primary') 
-            }
+            {state.right?.visible && createButton(state.right, 'float-end', 'primary')}
           </Col>
         </Row>
       </Container>
     );
   }
+);
 
-  createButton(btnState: NavButtonState, className: string, variant: any) {
-    if (btnState.link) {
-      return (
-        <Link key={btnState.link} to={btnState.link}>
-          <Button className={className} block variant={variant}>{btnState.text}</Button>
-        </Link>
-      )
-    } else if (btnState.onClick) {
-      return (
-        <Button className={className} block variant={variant} onClick={btnState.onClick}>{btnState.text}</Button>
-      )
-    } else {
-      return (
-        <Button className={className} block variant={variant}>{btnState.text}</Button>
-      )
-    }
-  }
-}
+BottomNavigation.displayName = 'BottomNavigation';
+export default BottomNavigation;

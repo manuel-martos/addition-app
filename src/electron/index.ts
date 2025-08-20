@@ -1,47 +1,75 @@
+// main.ts
 import { app, BrowserWindow, globalShortcut } from 'electron';
+import path from 'path';
+import url from 'url';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-function createWindow () {
-  // Create the browser window.
-  let win = new BrowserWindow({
+const IS_DEV = !!process.env.ELECTRON_START_URL; // or use another env flag
+
+let win: BrowserWindow | null = null;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function createWindow() {
+  win = new BrowserWindow({
     width: 800,
     height: 600,
     resizable: false,
     fullscreen: false,
     frame: false,
+    autoHideMenuBar: true, // replaces setMenuBarVisibility(false) + setMenu(null)
     webPreferences: {
-      nodeIntegration: true
-    }
+      // SECURITY: disable nodeIntegration in renderer, use preload for any bridging
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js'), // compile your preload.ts to this path
+    },
   });
 
-  // hide the default menu bar that comes with the browser window
-  win.setMenuBarVisibility(false);
-  win.setMenu(null);
+  if (IS_DEV) {
+    // e.g. React dev server
+    win.loadURL(process.env.ELECTRON_START_URL as string);
+    // win.webContents.openDevTools({ mode: 'detach' }); // optional for development
+  } else {
+    // load the built index.html
+    win.loadURL(
+      url.format({
+        pathname: path.join(__dirname, '../website/index.html'),
+        protocol: 'file:',
+        slashes: true,
+      })
+    );
+  }
 
-  // and load the index.html of the app.
-  win.loadURL(`file://${__dirname}/../website/index.html`);
+  win.on('closed', () => {
+    win = null;
+  });
 }
 
 function registerDevToolsShortcut() {
-  // Blocks 'CommandOrControl+Alt+I' shortcut and prevents DevTools.
-  const ret = globalShortcut.register('CommandOrControl+Alt+I', () => {});
+  // Example: block 'Cmd/Ctrl+Alt+I' to prevent DevTools
+  globalShortcut.register('CommandOrControl+Alt+I', () => {
+    // noop to swallow the shortcut
+  });
 }
 
-app.allowRendererProcessReuse = true;
-
-app.on('ready', () => {
+app.whenReady().then(() => {
   createWindow();
   // registerDevToolsShortcut();
+
+  app.on('activate', () => {
+    // macOS: re-create a window when the dock icon is clicked
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
-app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+// Quit when all windows are closed, except on macOS.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('will-quit', () => {
-  // Unregister all shortcuts.
-  globalShortcut.unregisterAll()
+  globalShortcut.unregisterAll();
 });
