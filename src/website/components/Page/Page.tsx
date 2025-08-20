@@ -1,17 +1,10 @@
-import React, { Component, ReactElement } from 'react';
-
+import React from 'react';
 import { NavButtonState } from '../BottomNavigation/BottomNavigation';
 
-export interface PageProps {
+export type PageProps = React.PropsWithChildren<{
   initNavigationButtons?: (left?: NavButtonState, right?: NavButtonState) => void;
-}
+}>;
 
-export default class Page<S = {}> extends Component<PageProps, S> {
-  render() {
-    return (
-      <>
-        {this.props.children}
-      </>
-    );
-  }
+export default function Page({ children }: PageProps) {
+  return <>{children}</>;
 }

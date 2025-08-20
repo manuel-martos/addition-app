@@ -1,15 +1,15 @@
 import { Start } from "../views/Start/Start";
 import { Additions } from "../views/Additions/Additions";
+import type { PageProps } from "../components/Page/Page";
 
-const indexRoutes = [
-  { 
-    path: '/', 
-    Component: Start 
-  },
-  { 
-    path: '/additions', 
-    Component: Additions 
-  }
+type RouteConfig = {
+  path: string;
+  Component: React.ComponentType<PageProps>;
+};
+
+const indexRoutes: RouteConfig[] = [
+  { path: "/", Component: Start },
+  { path: "/additions", Component: Additions },
 ];
 
 export default indexRoutes;

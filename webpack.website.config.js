@@ -32,14 +32,12 @@ module.exports = {
       },
       { test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=100000' },
       {
-        test: /\.ttf$/,
-        use: [{
-          loader: 'ttf-loader',
-          options: {
-            name: './font/[hash].[ext]',
-          },
-        }],
-      }
+        test: /\.(ttf|otf|eot|woff|woff2)$/i,
+        type: 'asset/resource', // emits files, returns URL
+        generator: {
+          filename: 'fonts/[name][contenthash][ext]' // optional nice path
+        }
+      },
     ],
   },
   resolve: {

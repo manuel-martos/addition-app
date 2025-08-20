@@ -1,59 +1,66 @@
-import React, { ReactNode, Component, Fragment, Children } from 'react';
-import { Route, Switch, Redirect } from "react-router";
-import { BrowserRouter as Router } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-import { CSSTransition } from "react-transition-group";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 
-import BottomNavigation from '../../components/BottomNavigation/BottomNavigation';
-import Page, { PageProps } from '../../components/Page/Page';
+import BottomNavigation, {
+  BottomNavigationHandle,
+  NavButtonState,
+} from '../../components/BottomNavigation/BottomNavigation';
+import { PageProps } from '../../components/Page/Page';
 
 import indexRoutes from "../../routes/index";
 import Container from 'react-bootstrap/Container';
-import Jumbotron from 'react-bootstrap/Jumbotron';
 
-import { NavButtonState } from '../../components/BottomNavigation/BottomNavigation';
+// Helper component so we can use hooks for animation keys
+function AnimatedRoutes({ onInitNavigationButtons }: { onInitNavigationButtons: PageProps["initNavigationButtons"] }) {
+  const location = useLocation();
 
-export class App extends Component<any> {
-  private bottomNavigation = React.createRef<BottomNavigation>();
-  constructor(props: any) {
-    super(props);
-    this.onInitNavigationButtons = this.onInitNavigationButtons.bind(this);
-  }
+  return (
+    <TransitionGroup component={null}>
+      <CSSTransition key={location.pathname} timeout={700} classNames="page" unmountOnExit>
+        <div className="page">
+          <Routes location={location}>
+            {indexRoutes.map(({ path, Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={<Component initNavigationButtons={onInitNavigationButtons} />}
+              />
+            ))}
+            {/* fallback replaces Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </CSSTransition>
+    </TransitionGroup>
+  );
+}  
 
-  onInitNavigationButtons(left?: NavButtonState, right?: NavButtonState) {
+class App extends React.Component {
+  bottomNavigation = React.useRef<BottomNavigationHandle>(null);
+
+  onInitNavigationButtons: PageProps["initNavigationButtons"] = (
+    left,
+    right
+  ) => {
     this.bottomNavigation.current?.updateButtons(left, right);
-  }
+  };
 
   render() {
     return (
       <Router>
         <div className="App">
-          <Jumbotron className='full-height'>
+          <div className="p-5 mb-4 bg-light rounded-3 full-height">
             <Container>
-              <Switch>
-                <Fragment>
-                  {indexRoutes.map(({path, Component}) => {
-                    return (
-                      <Route key={path} exact path={path}>
-                        {({ match }) => (
-                          <CSSTransition in={match != null} timeout={700} classNames="page" unmountOnExit>
-                            <div className="page">
-                              {React.createElement<PageProps>(Component, {initNavigationButtons: this.onInitNavigationButtons})}
-                            </div>
-                          </CSSTransition>
-                        )}               
-                      </Route>
-                    )
-                  })}
-                </Fragment>
-              </Switch>
-
+              <AnimatedRoutes onInitNavigationButtons={this.onInitNavigationButtons} />
               <BottomNavigation ref={this.bottomNavigation}/>
             </Container>
-          </Jumbotron>
+          </div>
         </div>
-        <Redirect exact to="/" />
       </Router>
     );
   }
 }
+
+export default App;

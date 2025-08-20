@@ -1,50 +1,54 @@
-import React, { Component, MouseEvent } from 'react';
-
+import { useState, useEffect, useCallback, MouseEvent } from 'react';
 import Card from 'react-bootstrap/Card';
 
 export interface SelectableCardProps {
-    title: string;
-    text: string;
-    selected: Boolean;
-    onSelectionChanged?: (card: SelectableCard, selected: Boolean) => void;
+  title: string;
+  text: string;
+  selected: boolean;
+  onSelectionChanged?: (selected: boolean) => void;
 }
 
-export interface SelectableCardState {
-    selected: Boolean;
-}
+/**
+ * SelectableCard — React 18+ function component
+ * - Uses button semantics for accessibility
+ * - Syncs internal state if the `selected` prop changes
+ * - Emits `onSelectionChanged(selected)` after toggling
+ */
+export function SelectableCard({
+  title,
+  text,
+  selected: selectedProp,
+  onSelectionChanged,
+}: SelectableCardProps) {
+  const [selected, setSelected] = useState<boolean>(selectedProp);
 
-export class SelectableCard extends Component<SelectableCardProps, SelectableCardState> {
-  constructor(props: SelectableCardProps) {
-    super(props);
-    this.state = { selected: props.selected };
-    this.toggleSelection = this.toggleSelection.bind(this);
-  }
+  // keep internal state in sync if parent updates the prop
+  useEffect(() => {
+    setSelected(selectedProp);
+  }, [selectedProp]);
 
-  toggleSelection(event: MouseEvent) {
-    event.preventDefault();
-    let selected = !this.state.selected;
-    this.setState({ selected: selected });
-    if (this.props.onSelectionChanged) {
-      this.props.onSelectionChanged(this, selected);
-    }
-  }
+  const toggleSelection = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const next = !selected;
+    setSelected(next);
+    onSelectionChanged?.(next);
+  }, [selected, onSelectionChanged]);
 
-  setSelected(selected: Boolean) {
-    this.setState({ selected: selected });
-  }
-
-  render() {
-    return (
-      <a onClick={this.toggleSelection}>
-        <Card>
-          <Card className={this.state.selected ? 'selected' : 'unselected'}>
-            <Card.Body>
-              <Card.Title>{this.props.title}</Card.Title>
-              <Card.Text>{this.props.text}</Card.Text>
-            </Card.Body>
-          </Card>
+  return (
+    <button
+      type="button"
+      onClick={toggleSelection}
+      aria-pressed={selected}
+      style={{ all: 'unset', cursor: 'pointer', display: 'block' }} // avoid default button styles
+    >
+      <Card>
+        <Card className={selected ? 'selected' : 'unselected'}>
+          <Card.Body>
+            <Card.Title>{title}</Card.Title>
+            <Card.Text>{text}</Card.Text>
+          </Card.Body>
         </Card>
-      </a>
-    );
-  }
+      </Card>
+    </button>
+  );
 }

@@ -1,15 +1,5 @@
-import React, { Component, ReactElement } from 'react';
+import { PropsWithChildren } from 'react';
 
-export default class PageBody extends Component<any> {
-  constructor(props: any) {
-    super(props);
-  }
-    
-  render() {
-    return (
-      <>
-        {this.props.children}
-      </>
-    );
-  }
+export default function PageBody({ children }: PropsWithChildren<unknown>) {
+  return <>{children}</>;
 }

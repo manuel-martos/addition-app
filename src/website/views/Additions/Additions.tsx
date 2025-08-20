@@ -1,108 +1,98 @@
-import React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Page, { PageProps } from '../../components/Page/Page';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import PageBody from '../../components/PageBody/PageBody';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import Modal  from 'react-bootstrap/Modal';
+import Modal from 'react-bootstrap/Modal';
 import { ArithmeticQuiz } from '../../components/ArithmeticQuiz/ArithmeticQuiz';
-;
+import type { ArithmeticQuizHandle } from '../../components/ArithmeticQuiz/ArithmeticQuiz';
+import type { PageProps } from '../../components/Page/Page';
 
 const MAX_ARITHMETIC_QUIZS = 4;
 
-interface AdditionsState {
-  showResult: boolean
-}
+export function Additions(props: PageProps) {
+  const [showResult, setShowResult] = useState(false);
+  const quizRefs = useRef<Array<ArithmeticQuizHandle | null>>([]);
 
-export class Additions extends Page<AdditionsState> {
-  private arithmeticQuizs: ArithmeticQuiz[] = [];
+  const pageHeader = useMemo(
+    () => ({
+      title: 'Fem sumes!',
+      lead: 'Les sumes son molt divertides.',
+      description: 'Escriu el resultat de les sumes:',
+    }),
+    []
+  );
 
-  constructor(props: PageProps) {
-    super(props);
-    this.state = { showResult: false };
-    this.onResultModalRefresh = this.onResultModalRefresh.bind(this);
-    this.onResultModalFinish = this.onResultModalFinish.bind(this);
-  }
+  const onResultModalRefresh = useCallback(() => {
+    setShowResult(false);
+    quizRefs.current.forEach((q) => q?.updateQuiz());
+  }, []);
 
-  onResultModalRefresh() {
-    this.setState({ showResult: false });
-    for (var arithmeticQuiz of this.arithmeticQuizs) {
-      arithmeticQuiz.updateQuiz();
+  const onResultModalFinish = useCallback(() => {
+    const remote = (window as any).require?.('electron')?.remote;
+    const win = remote?.getCurrentWindow?.();
+    win?.close?.();
+  }, []);
+
+  const onValidateAnswers = useCallback(() => {
+    let allCorrect = true;
+    for (let i = 0; i < MAX_ARITHMETIC_QUIZS; i++) {
+      const ok = quizRefs.current[i]?.validateAnswer() ?? false;
+      allCorrect = allCorrect && ok;
     }
-  }
+    if (allCorrect) setShowResult(true);
+  }, []);
 
-  onResultModalFinish() {
-    const remote = window.require('electron').remote;
-    var win = remote.getCurrentWindow();
-    win.close();
-  }
+  // Set up navigation buttons (componentDidMount equivalent)
+  useEffect(() => {
+    const rightButton = {
+      visible: true,
+      text: 'Corretgir',
+      onClick: onValidateAnswers,
+    };
+    props.initNavigationButtons?.(undefined, rightButton);
+  }, [props.initNavigationButtons, onValidateAnswers]);
 
-  createArithmeticQuizs() {
-    let quizs = [];
-    this.arithmeticQuizs = []; 
-    for (let idx = 0; idx < MAX_ARITHMETIC_QUIZS; idx++) {
-      quizs.push(<ArithmeticQuiz 
-        key={idx} 
-        ref={ref => { this.arithmeticQuizs.splice(idx, 1, ref!) }} />);
-    }
-    return quizs;
-  }
+  // Render quizzes and keep refs in sync
+  const quizElements = useMemo(() => {
+    quizRefs.current.length = MAX_ARITHMETIC_QUIZS;
+    return Array.from({ length: MAX_ARITHMETIC_QUIZS }, (_, idx) => (
+      <ArithmeticQuiz
+        key={idx}
+        ref={(ref) => {
+          quizRefs.current[idx] = ref;
+        }}
+      />
+    ));
+  }, []);
 
-  createResultModal() {
-    return (
-      <Modal show={this.state.showResult}>
+  return (
+    <>
+      <PageHeader info={pageHeader} />
+      <PageBody>
+        <Form>
+          <Container>{quizElements}</Container>
+        </Form>
+      </PageBody>
+
+      <Modal show={showResult}>
         <Modal.Body>
           <p>Totes les respostes son correctes. Molt ben fet!</p>
           <p>Ara pots decidir si vols acabar o si vols tornar a fer mes sumes.</p>
         </Modal.Body>
-
         <Modal.Footer>
-          <Button variant="secondary" onClick={this.onResultModalFinish}>Acabar</Button>
-          <Button variant="primary" onClick={this.onResultModalRefresh}>Tornar a fer sumes</Button>
+          <Button variant="secondary" onClick={onResultModalFinish}>
+            Acabar
+          </Button>
+          <Button variant="primary" onClick={onResultModalRefresh}>
+            Tornar a fer sumes
+          </Button>
         </Modal.Footer>
       </Modal>
-    );
-  }
-
-  render() {
-    let pageHeader = {
-      title: `Fem sumes!`,
-      lead: `Les sumes son molt divertides.`,
-      description: `Escriu el resultat de les sumes:`
-    };
-    return (
-      <>
-        <PageHeader info={pageHeader}/>
-        <PageBody>
-          <Form>
-            <Container>
-              {this.createArithmeticQuizs()}
-            </Container>
-          </Form>
-        </PageBody>
-        { this.createResultModal() }
-      </>
-    );
-  }
-
-  componentDidMount() {
-    let rightButton = {
-      visible: true,
-      text: 'Corretgir',
-      onClick: this.onValidateAnswers.bind(this)
-    };
-    this.props.initNavigationButtons?.(undefined, rightButton);
-  }
-
-  onValidateAnswers() {
-    let result = true;
-    for (var idx = 0; idx < MAX_ARITHMETIC_QUIZS; idx++) {
-      result = this.arithmeticQuizs[idx].validateAnswer() && result;
-    }
-    if (result) {
-      this.setState({showResult: true});
-    }
-  }
+    </>
+  );
 }
+
+export default Additions;

@@ -1,87 +1,114 @@
-import React, { Component } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import Col from 'react-bootstrap/Col';
 import FormControl from 'react-bootstrap/FormControl';
 import Row from 'react-bootstrap/Row';
 
-export enum Operator {Add, Substract}
+export enum Operator {
+  Add,
+  Substract,
+}
 
 export interface ArithmeticQuizInfo {
   value1: number;
   value2: number;
   operator: Operator;
-};
+}
 
 export interface ArithmeticQuizState {
-  quizInfo: ArithmeticQuizInfo; 
+  quizInfo: ArithmeticQuizInfo;
   result?: boolean;
 }
 
-export class ArithmeticQuiz extends Component<any, ArithmeticQuizState> {
-  private answer = React.createRef<typeof FormControl & HTMLInputElement>();
+// Public imperative API (same methods the parent expects to call)
+export interface ArithmeticQuizHandle {
+  updateQuiz: () => void;
+  validateAnswer: () => boolean;
+}
 
-  constructor(props: any) {
-    super(props);
-    this.state = {result: undefined, quizInfo: this.createRandomQuiz()};
-  }
+// No incoming props were used; keep it empty to match original usage.
+export interface ArithmeticQuizProps {}
 
-  updateQuiz() {
-    this.setState({result: undefined, quizInfo: this.createRandomQuiz()});
-    if (this.answer.current) {
-      this.answer.current.value = '';
-    }
-  }
+export const ArithmeticQuiz = forwardRef<ArithmeticQuizHandle, ArithmeticQuizProps>(
+  (_props, ref) => {
+    const [quizInfo, setQuizInfo] = useState<ArithmeticQuizInfo>(() => createRandomQuiz());
+    const [result, setResult] = useState<boolean | undefined>(undefined);
+    const answerRef = useRef<HTMLInputElement | null>(null);
 
-  private createRandomQuiz() {
-    let value1, value2;
-    do {
-      value1 = 1 + Math.floor(Math.random() * 8);
-      value2 = 1 + Math.floor(Math.random() * 8);
-    } while (value1 < value2);
-    return { value1: value1, value2: value2, operator: Operator.Add };
-  }
+    const opSymbol = useMemo(
+      () => (quizInfo.operator === Operator.Add ? '+' : '-'),
+      [quizInfo.operator]
+    );
 
-  render() {
-    let op = this.state.quizInfo.operator === Operator.Add ? '+' : '-'; 
-    let style = this.state.result !== undefined 
-      ? { borderColor: this.state.result ? 'green' : 'red' }
-      : {}
+    const getValidAnswer = useCallback(() => {
+      return quizInfo.operator === Operator.Add
+        ? quizInfo.value1 + quizInfo.value2
+        : quizInfo.value1 - quizInfo.value2;
+    }, [quizInfo]);
+
+    const getCurrentAnswer = useCallback((): number | undefined => {
+      const raw = answerRef.current?.value ?? '';
+      if (typeof raw !== 'string') return undefined;
+      const parsed = parseInt(raw, 10);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }, []);
+
+    const updateQuiz = useCallback(() => {
+      setResult(undefined);
+      setQuizInfo(createRandomQuiz());
+      if (answerRef.current) {
+        answerRef.current.value = '';
+      }
+    }, []);
+
+    const validateAnswer = useCallback(() => {
+      const current = getCurrentAnswer();
+      const valid = getValidAnswer();
+      const ok = current === valid;
+      setResult(ok);
+      return ok;
+    }, [getCurrentAnswer, getValidAnswer]);
+
+    // Expose imperative methods to the parent (matches class component API)
+    useImperativeHandle(ref, () => ({ updateQuiz, validateAnswer }), [updateQuiz, validateAnswer]);
+
+    const inputStyle: React.CSSProperties =
+      result !== undefined ? { borderColor: result ? 'green' : 'red' } : {};
+
     return (
       <Row className="justify-content-md-center center-vertical">
-        <Col className='col-md-1'>{this.state.quizInfo.value1}</Col>
-        <Col className='col-md-1'>{op}</Col>
-        <Col className='col-md-1'>{this.state.quizInfo.value2}</Col>
-        <Col className='col-md-1'>=</Col>
-        <Col className='col-md-2'><FormControl ref={this.answer} id='addition' type="text" style={style}/></Col>
-        {this.state.result === undefined && 
-          <Col className='col-md-3'>&nbsp;</Col>}
-        {this.state.result !== undefined && this.state.result === true && 
-          <Col className='col-md-3'>Correcte!</Col>}
-        {this.state.result !== undefined && this.state.result === false && 
-          <Col className='col-md-3'>Incorrecte!</Col>}
+        <Col className="col-md-1">{quizInfo.value1}</Col>
+        <Col className="col-md-1">{opSymbol}</Col>
+        <Col className="col-md-1">{quizInfo.value2}</Col>
+        <Col className="col-md-1">=</Col>
+        <Col className="col-md-2">
+          <FormControl ref={answerRef} id="addition" type="text" style={inputStyle} />
+        </Col>
+
+        {result === undefined && <Col className="col-md-3">&nbsp;</Col>}
+        {result === true && <Col className="col-md-3">Correcte!</Col>}
+        {result === false && <Col className="col-md-3">Incorrecte!</Col>}
       </Row>
     );
   }
+);
 
-  validateAnswer() {
-    const result = this.getCurrentAnswer() === this.getValidAnswer();
-    this.setState({ result: result });
-    return result;
-  }
+ArithmeticQuiz.displayName = 'ArithmeticQuiz';
 
-  private getCurrentAnswer() {
-    if (typeof this.answer.current?.value === 'string') {
-      return parseInt(this.answer.current?.value);
-    } else {
-      return undefined;
-    }
-  }
+// --- helpers ---
 
-  private getValidAnswer() {
-    if (this.state.quizInfo.operator == Operator.Add) {
-      return this.state.quizInfo.value1 + this.state.quizInfo.value2;
-    } else {
-      return this.state.quizInfo.value1 - this.state.quizInfo.value2;
-    }
-  }
+function createRandomQuiz(): ArithmeticQuizInfo {
+  let value1: number, value2: number;
+  do {
+    value1 = 1 + Math.floor(Math.random() * 8);
+    value2 = 1 + Math.floor(Math.random() * 8);
+  } while (value1 < value2);
+  return { value1, value2, operator: Operator.Add };
 }
